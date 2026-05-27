@@ -1,0 +1,320 @@
+```html
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Шашки | Checkers</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+        html,body{width:100vw;height:100dvh;overflow:hidden;position:fixed;top:0;left:0}
+        body{
+            background:repeating-linear-gradient(90deg,#3a2318 0px,#4a2d1e 2px,#3d2519 4px,#452a1c 6px,#3a2318 8px),radial-gradient(ellipse at center,#5a3a2a 0%,#2a1810 100%);
+            font-family:'Georgia','Times New Roman',serif;display:flex;justify-content:center;align-items:center;color:#ccc;
+        }
+        #app{width:100vw;height:100dvh;max-width:100vw;background:rgba(20,10,5,0.75);display:flex;flex-direction:column;position:relative;backdrop-filter:blur(2px)}
+        .screen{display:none;flex-direction:column;height:100%;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+        .screen.active{display:flex}
+        .title{font-size:1.8em;letter-spacing:5px;color:#c8a060;text-align:center;margin-bottom:8px;text-shadow:0 2px 4px rgba(0,0,0,0.5)}
+        .currency-row{display:flex;justify-content:center;gap:16px;margin-bottom:20px;align-items:center}
+        .currency-item{text-align:center;color:#c8b8a0;font-size:0.9em;letter-spacing:1px}
+        .currency-item span{color:#c8a060;font-weight:bold;font-size:1.1em}
+        .plus-btn{background:rgba(200,160,96,0.2);border:1px solid #c8a060;color:#c8a060;padding:2px 8px;border-radius:50%;cursor:pointer;font-size:0.8em;margin-left:4px;transition:0.3s}
+        .plus-btn:active{background:rgba(200,160,96,0.5)}
+        .btn{background:rgba(30,15,8,0.7);border:1px solid #5a3a2a;color:#c8b8a0;padding:12px 16px;font-size:0.9em;letter-spacing:2px;margin:5px 0;width:100%;cursor:pointer;font-family:'Georgia',serif;text-align:center;transition:0.3s;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,0.3)}
+        .btn:active{background:rgba(60,30,15,0.9);border-color:#c8a060;color:#fff;transform:scale(0.97);box-shadow:0 0 15px rgba(200,160,96,0.3)}
+        .btn-sm{padding:9px 12px;font-size:0.8em;letter-spacing:1px}
+        .toggle-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
+        .toggle-label{color:#c8b8a0;font-size:0.85em;letter-spacing:1px}
+        .toggle-btn{background:rgba(30,15,8,0.7);border:1px solid #5a3a2a;color:#c8a060;padding:7px 14px;font-size:0.8em;letter-spacing:1px;cursor:pointer;font-family:'Georgia',serif;border-radius:20px;transition:0.3s}
+        .toggle-btn:active{background:rgba(200,160,96,0.3)}
+        .back{margin-top:auto;color:#8a7a6a;font-size:0.8em;letter-spacing:1px;cursor:pointer;text-align:center;padding:8px;transition:0.3s}
+        .back:active{color:#c8a060}
+        .board-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:3px}
+        .board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;max-width:min(90vw,350px);aspect-ratio:1;border:4px solid #3d2b1f;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,0.6),inset 0 0 0 2px rgba(0,0,0,0.3)}
+        .cell{display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.15s;position:relative}
+        .cell.light{background:#d4b896;box-shadow:inset 0 1px 3px rgba(255,255,255,0.3)}
+        .cell.dark{background:#6b4c3b;box-shadow:inset 0 1px 3px rgba(0,0,0,0.3)}
+        .cell.selected{box-shadow:inset 0 0 0 4px #7fc97f,0 0 15px rgba(127,201,127,0.5)!important}
+        .cell.possible{box-shadow:inset 0 0 0 4px rgba(255,215,0,0.6)!important}
+        .cell.possible::after{content:'';position:absolute;width:20%;height:20%;background:rgba(255,215,0,0.4);border-radius:50%}
+        .piece{width:70%;height:70%;border-radius:50%;position:relative;transition:0.15s;z-index:1}
+        .piece-white{background:radial-gradient(circle at 35% 35%,#fff,#c8c8c8 50%,#999 100%);box-shadow:2px 3px 6px rgba(0,0,0,0.5),inset -2px -2px 4px rgba(0,0,0,0.3),inset 2px 2px 4px rgba(255,255,255,0.4)}
+        .piece-black{background:radial-gradient(circle at 35% 35%,#666,#222 50%,#0a0a0a 100%);box-shadow:2px 3px 6px rgba(0,0,0,0.6),inset -2px -2px 4px rgba(0,0,0,0.4),inset 2px 2px 4px rgba(255,255,255,0.15)}
+        .piece-king{box-shadow:0 0 10px rgba(255,215,0,0.7),2px 3px 6px rgba(0,0,0,0.5),inset -2px -2px 4px rgba(0,0,0,0.3);border:3px solid #c8a060}
+        .piece-king::after{content:'👑';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2em;filter:drop-shadow(0 0 3px rgba(255,215,0,0.8))}
+        .piece-gold{background:radial-gradient(circle at 35% 35%,#ffd700,#b8860b 50%,#8b6914 100%)!important;box-shadow:0 0 12px rgba(255,215,0,0.6),2px 3px 6px rgba(0,0,0,0.5)!important}
+        .status{text-align:center;font-size:0.8em;color:#c8a060;padding:6px;letter-spacing:1px;flex-shrink:0}
+        .lang-row{display:flex;gap:6px;width:100%}
+        .lang-row .btn{flex:1;padding:9px;font-size:0.8em}
+        .lang-row .btn.active-lang{background:rgba(200,160,96,0.3);border-color:#c8a060;color:#c8a060}
+        .shop-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #3a2a1a}
+        .shop-item .name{color:#c8b8a0;font-size:0.85em}
+        .shop-item .price{color:#c8a060;font-size:0.8em}
+        .shop-item .buy-btn{background:rgba(30,15,8,0.7);border:1px solid #5a3a2a;color:#c8a060;padding:5px 12px;border-radius:12px;cursor:pointer;font-size:0.75em;letter-spacing:1px}
+        .shop-item .buy-btn:active{background:#c8a060;color:#1a1a1a}
+        .shop-item .owned{color:#5a5;font-size:0.75em}
+        .footer{text-align:center;color:#6a5a4a;font-size:0.65em;letter-spacing:2px;margin-top:12px;flex-shrink:0}
+        .game-bottom{display:flex;gap:6px;flex-shrink:0}
+        .info-text{color:#c8b8a0;font-size:0.8em;line-height:1.7;overflow-y:auto;flex:1;background:rgba(0,0,0,0.2);border-radius:8px;padding:10px}
+        .bonus-msg{text-align:center;color:#ffd700;font-size:0.8em;margin-bottom:6px;animation:pulse 1.5s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- МЕНЮ -->
+    <div class="screen active" id="menuScreen">
+        <div class="title" data-key="title">ШАШКИ</div>
+        <div class="currency-row">
+            <div class="currency-item">💰 <span id="menuCoins">1000</span><button class="plus-btn" onclick="dailyBonus()">+</button></div>
+            <div class="currency-item">💎 <span id="menuGems">10</span><button class="plus-btn" onclick="exchangeGems()">+</button></div>
+        </div>
+        <div id="bonusMsg" class="bonus-msg"></div>
+        <button class="btn" onclick="showMode()" data-key="newGame">🆕 Жаңа ойын</button>
+        <button class="btn" onclick="continueGame()" data-key="continue">📂 Жалғастыру</button>
+        <button class="btn" onclick="showShop()" data-key="shop">🛒 Дүкен</button>
+        <button class="btn" onclick="showSettings()" data-key="settings">⚙️ Баптаулар</button>
+        <div class="footer">Дәулет Әлімжан • v.1.0</div>
+    </div>
+
+    <!-- РЕЖИМ -->
+    <div class="screen" id="modeScreen">
+        <div class="title" data-key="mode">Режим</div>
+        <div class="toggle-row"><span class="toggle-label" data-key="captureRule">Жеу:</span><button class="toggle-btn" id="captureToggle" onclick="toggleCapture()">Міндетті</button></div>
+        <button class="btn" onclick="startGame('twoPlayer')" data-key="twoPlayer">👥 2 ойыншы</button>
+        <button class="btn" onclick="showDifficulty()" data-key="computer">🤖 Компьютер</button>
+        <div class="back" onclick="showMenu()" data-key="back">← Артқа</div>
+    </div>
+
+    <!-- ҚИЫНДЫҚ -->
+    <div class="screen" id="difficultyScreen">
+        <div class="title" data-key="difficulty">Қиындық</div>
+        <button class="btn" onclick="startGame('ai_easy')" data-key="easy">🟢 Оңай</button>
+        <button class="btn" onclick="startGame('ai_medium')" data-key="medium">🟡 Орташа</button>
+        <button class="btn" onclick="startGame('ai_hard')" data-key="hard">🔴 Қиын</button>
+        <div class="back" onclick="showMode()" data-key="back">← Артқа</div>
+    </div>
+
+    <!-- ДҮКЕН -->
+    <div class="screen" id="shopScreen">
+        <div class="title" data-key="shop">Дүкен</div>
+        <div class="currency-row">
+            <div class="currency-item">💰 <span id="shopCoins">1000</span></div>
+            <div class="currency-item">💎 <span id="shopGems">10</span></div>
+        </div>
+        <div style="color:#c8a060;font-size:0.8em;margin-bottom:8px;">🎨 Тақта түстері</div>
+        <div class="shop-item"><span class="name">🟤 Классикалық</span><span class="owned">✅</span></div>
+        <div class="shop-item"><span class="name">🔵 Көк</span><span class="price">200 💰</span><button class="buy-btn" onclick="buyItem('board_blue',200,'coins')">Сатып алу</button></div>
+        <div class="shop-item"><span class="name">🟢 Жасыл</span><span class="price">200 💰</span><button class="buy-btn" onclick="buyItem('board_green',200,'coins')">Сатып алу</button></div>
+        <div style="color:#c8a060;font-size:0.8em;margin:10px 0 8px;">🪨 Фигура стильдері</div>
+        <div class="shop-item"><span class="name">⚪ Классикалық</span><span class="owned">✅</span></div>
+        <div class="shop-item"><span class="name">🟡 Алтын</span><span class="price">3 💎</span><button class="buy-btn" onclick="buyItem('piece_gold',3,'gems')">Сатып алу</button></div>
+        <div class="back" onclick="showMenu()" data-key="back">← Артқа</div>
+    </div>
+
+    <!-- БАПТАУЛАР -->
+    <div class="screen" id="settingsScreen">
+        <div class="title" data-key="settingsTitle">Баптаулар</div>
+        <div style="color:#c8b8a0;font-size:0.8em;letter-spacing:1px;margin-bottom:5px;" data-key="language">🌐 Тіл</div>
+        <div class="lang-row">
+            <button class="btn btn-sm active-lang" onclick="setLang('kk')">🇰🇿 Қаз</button>
+            <button class="btn btn-sm" onclick="setLang('ru')">🇷🇺 Рус</button>
+            <button class="btn btn-sm" onclick="setLang('en')">🇬🇧 Eng</button>
+        </div>
+        <button class="btn" onclick="toggleSoundSettings()" style="margin-top:12px;">🔊 <span data-key="sound">Дыбыс</span>: <span id="soundStatusSettings" data-key="on">Қосулы</span></button>
+        <button class="btn" onclick="showRules()" data-key="rules">ℹ️ Ережелер</button>
+        <button class="btn" onclick="showInfo()" data-key="info">📋 Ақпарат</button>
+        <div class="back" onclick="showMenu()" data-key="back">← Артқа</div>
+    </div>
+
+    <!-- ЕРЕЖЕЛЕР -->
+    <div class="screen" id="rulesScreen">
+        <div class="title" data-key="rulesTitle">Ережелер</div>
+        <div class="info-text" data-key="rulesText">• 8×8 тақта, 12 фигурадан<br>• Жүріс — диагональ бойынша 1 қадам<br>• Қарсыластың фигурасын секіру (жеу)<br>• Дамка — соңғы қатарға жеткенде<br>• Дамка кез келген бағытта жүреді<br>• Жеңіс — барлық фигураны жеу</div>
+        <div class="back" onclick="showSettings()" data-key="back">← Артқа</div>
+    </div>
+
+    <!-- АҚПАРАТ -->
+    <div class="screen" id="infoScreen">
+        <div class="title" data-key="infoTitle">Ақпарат</div>
+        <div style="color:#c8b8a0;font-size:0.9em;text-align:center;line-height:2.2;">
+            <div data-key="founder">Негізін қалаушы</div>
+            <div style="color:#c8a060;font-size:1.3em;">Дәулет Әлімжан</div>
+            <div style="color:#8a7a6a;font-size:0.8em;" data-key="version">📌 v.1.0</div>
+        </div>
+        <div class="back" onclick="showSettings()" data-key="back">← Артқа</div>
+    </div>
+
+    <!-- ОЙЫН -->
+    <div class="screen" id="gameScreen" style="padding:6px;">
+        <div class="status" id="statusText">Сіздің кезегіңіз</div>
+        <div class="board-wrap"><div class="board" id="board"></div></div>
+        <div class="game-bottom">
+            <button class="btn btn-sm" onclick="undoMove()" data-key="undo">⬅ Қайтару</button>
+            <button class="btn btn-sm" onclick="exitGame()" data-key="menu">🏠 Меню</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== ТІЛДЕР ====================
+const LANG={
+kk:{title:'ШАШКИ',newGame:'🆕 Жаңа ойын','continue':'📂 Жалғастыру',shop:'🛒 Дүкен',settings:'⚙️ Баптаулар',mode:'Режим',captureRule:'Жеу:',mandatory:'Міндетті',optional:'Міндетті емес',twoPlayer:'👥 2 ойыншы',computer:'🤖 Компьютер',difficulty:'Қиындық',easy:'🟢 Оңай',medium:'🟡 Орташа',hard:'🔴 Қиын',settingsTitle:'Баптаулар',language:'🌐 Тіл',sound:'Дыбыс',on:'Қосулы',off:'Өшірулі',rules:'ℹ️ Ережелер',info:'📋 Ақпарат',rulesTitle:'Ережелер',rulesText:'• 8×8 тақта, 12 фигурадан<br>• Жүріс — диагональ бойынша 1 қадам<br>• Қарсыластың фигурасын секіру (жеу)<br>• Дамка — соңғы қатарға жеткенде<br>• Дамка кез келген бағытта жүреді<br>• Жеңіс — барлық фигураны жеу',infoTitle:'Ақпарат',founder:'Негізін қалаушы',version:'📌 v.1.0',back:'← Артқа',yourTurn:'Сіздің кезегіңіз',computerThinking:'Компьютер ойлануда...',youWon:'Сіз жеңдіңіз! 🎉',youLost:'Сіз жеңілдіңіз... 😞',draw:'Тепе-теңдік! 🤝',undo:'⬅ Қайтару',menu:'🏠 Меню',noSave:'Сақталған ойын жоқ',bonusReady:'🎁 Бонус дайын!',bonusTaken:'✅ Бонус алынды',bonusWait:'⏰ Келесі бонус:',bonusNoNeed:'💰 750-ден көп, бонус жоқ',buy:'Сатып алу',owned:'✅'},ru:{title:'ШАШКИ',newGame:'🆕 Новая игра','continue':'📂 Продолжить',shop:'🛒 Магазин',settings:'⚙️ Настройки',mode:'Режим',captureRule:'Рубка:',mandatory:'Обязательна',optional:'Не обязательна',twoPlayer:'👥 2 игрока',computer:'🤖 Компьютер',difficulty:'Сложность',easy:'🟢 Лёгкий',medium:'🟡 Средний',hard:'🔴 Трудный',settingsTitle:'Настройки',language:'🌐 Язык',sound:'Звук',on:'Вкл',off:'Выкл',rules:'ℹ️ Правила',info:'📋 Инфо',rulesTitle:'Правила',rulesText:'• 8×8 доска, 12 фигур<br>• Ход — 1 шаг по диагонали<br>• Прыжок через фигуру соперника (рубка)<br>• Дамка — достижение последнего ряда<br>• Дамка ходит в любом направлении<br>• Победа — все фигуры соперника срублены',infoTitle:'Информация',founder:'Основатель',version:'📌 v.1.0',back:'← Назад',yourTurn:'Ваш ход',computerThinking:'Компьютер думает...',youWon:'Вы выиграли! 🎉',youLost:'Вы проиграли... 😞',draw:'Ничья! 🤝',undo:'⬅ Отменить',menu:'🏠 Меню',noSave:'Нет сохранений',bonusReady:'🎁 Бонус готов!',bonusTaken:'✅ Бонус получен',bonusWait:'⏰ Следующий бонус:',bonusNoNeed:'💰 Более 750, бонуса нет',buy:'Купить',owned:'✅'},en:{title:'CHECKERS',newGame:'🆕 New Game','continue':'📂 Continue',shop:'🛒 Shop',settings:'⚙️ Settings',mode:'Mode',captureRule:'Capture:',mandatory:'Mandatory',optional:'Optional',twoPlayer:'👥 2 Players',computer:'🤖 Computer',difficulty:'Difficulty',easy:'🟢 Easy',medium:'🟡 Medium',hard:'🔴 Hard',settingsTitle:'Settings',language:'🌐 Language',sound:'Sound',on:'On',off:'Off',rules:'ℹ️ Rules',info:'📋 Info',rulesTitle:'Rules',rulesText:'• 8×8 board, 12 pieces<br>• Move — 1 step diagonally<br>• Jump over opponent piece (capture)<br>• King — reaching the last row<br>• King moves in any direction<br>• Win — capture all opponent pieces',infoTitle:'Information',founder:'Founder',version:'📌 v.1.0',back:'← Back',yourTurn:'Your turn',computerThinking:'Computer thinking...',youWon:'You won! 🎉',youLost:'You lost... 😞',draw:'Draw! 🤝',undo:'⬅ Undo',menu:'🏠 Menu',noSave:'No saved game',bonusReady:'🎁 Bonus ready!',bonusTaken:'✅ Bonus taken',bonusWait:'⏰ Next bonus:',bonusNoNeed:'💰 Over 750, no bonus',buy:'Buy',owned:'✅'}
+};
+let currentLang='kk',mandatoryCapture=true,soundEnabled=true,coins=1000,gems=10,ownedItems=['board_default','piece_default'],boardTheme='default',pieceTheme='default';
+let board,currentPlayer,selectedCell,possibleMoves,gameMode,aiLevel,moveHistory,gameOver,mustCaptureList,aiTimer;
+
+function t(k){return LANG[currentLang][k]||k}
+function applyLang(){document.querySelectorAll('[data-key]').forEach(e=>{e.textContent=t(e.dataset.key)});document.getElementById('soundStatusSettings').textContent=soundEnabled?t('on'):t('off');document.getElementById('captureToggle').textContent=mandatoryCapture?t('mandatory'):t('optional');updateLangButtons();updateShopUI();if(document.getElementById('gameScreen').classList.contains('active'))updateStatus()}
+function setLang(l){currentLang=l;localStorage.setItem('csL',l);applyLang()}
+function updateLangButtons(){document.querySelectorAll('.lang-row .btn').forEach(b=>b.classList.remove('active-lang'));document.querySelectorAll('.lang-row .btn')[{kk:0,ru:1,en:2}[currentLang]].classList.add('active-lang')}
+
+// ==================== ДЫБЫС ====================
+const AC=window.AudioContext||window.webkitAudioContext;let actx=null;
+function initAudio(){if(!actx)actx=new AC();if(actx.state==='suspended')actx.resume()}
+function ps(f,ty,d,v=0.08){if(!soundEnabled||!actx)return;try{let o=actx.createOscillator(),g=actx.createGain();o.type=ty;o.frequency.setValueAtTime(f,actx.currentTime);g.gain.setValueAtTime(v,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
+function sMove(){ps(300,'triangle',0.15)}
+function sCapture(){ps(150,'sawtooth',0.25);setTimeout(()=>ps(600,'sawtooth',0.15),100)}
+function sKing(){ps(523,'sine',0.3);setTimeout(()=>ps(659,'sine',0.3),200)}
+function sWin(){ps(523,'sine',0.3);setTimeout(()=>ps(659,'sine',0.3),200);setTimeout(()=>ps(784,'sine',0.4),400)}
+function sLose(){ps(150,'square',0.4);setTimeout(()=>ps(100,'square',0.3),300)}
+function sTurn(){ps(800,'sine',0.1)}
+function toggleSoundSettings(){initAudio();soundEnabled=!soundEnabled;document.getElementById('soundStatusSettings').textContent=soundEnabled?t('on'):t('off');localStorage.setItem('csS',soundEnabled?'on':'off')}
+
+// ==================== МОНЕТА / АЛМАЗ / БОНУС ====================
+function loadCurrency(){try{let c=localStorage.getItem('csC');if(c!==null)coins=parseInt(c);let g=localStorage.getItem('csG');if(g!==null)gems=parseInt(g)}catch(e){}}
+function saveCurrency(){localStorage.setItem('csC',coins);localStorage.setItem('csG',gems);updateCurrencyUI()}
+function updateCurrencyUI(){let mc=document.getElementById('menuCoins'),mg=document.getElementById('menuGems'),sc=document.getElementById('shopCoins'),sg=document.getElementById('shopGems');if(mc)mc.textContent=coins;if(mg)mg.textContent=gems;if(sc)sc.textContent=coins;if(sg)sg.textContent=gems}
+function dailyBonus(){
+    if(coins>=750){document.getElementById('bonusMsg').textContent=t('bonusNoNeed');return}
+    let now=Date.now(),last=localStorage.getItem('csBT');
+    if(last&&now-parseInt(last)<86400000){
+        let rem=86400000-(now-parseInt(last)),h=Math.floor(rem/3600000),m=Math.floor((rem%3600000)/60000);
+        document.getElementById('bonusMsg').textContent=t('bonusWait')+' '+h+'с '+m+'мин';
+        return;
+    }
+    coins+=100;gems+=1;localStorage.setItem('csBT',now);saveCurrency();
+    document.getElementById('bonusMsg').textContent=t('bonusTaken')+' +100💰 +1💎';
+    setTimeout(()=>document.getElementById('bonusMsg').textContent='',3000);
+}
+function exchangeGems(){if(coins>=100){coins-=100;gems+=1;saveCurrency();document.getElementById('bonusMsg').textContent='💱 100💰 → 1💎';setTimeout(()=>document.getElementById('bonusMsg').textContent='',2000)}}
+function addWinReward(){coins+=200;gems+=2;saveCurrency()}
+function addLosePenalty(){coins=Math.max(0,coins-100);gems=Math.max(0,gems-1);saveCurrency()}
+
+// ==================== ДҮКЕН ====================
+function loadShop(){try{let o=localStorage.getItem('csO');if(o)ownedItems=JSON.parse(o);let bt=localStorage.getItem('csBT2');if(bt)boardTheme=bt;let pt=localStorage.getItem('csPT');if(pt)pieceTheme=pt}catch(e){}}
+function saveShop(){localStorage.setItem('csO',JSON.stringify(ownedItems));localStorage.setItem('csBT2',boardTheme);localStorage.setItem('csPT',pieceTheme)}
+function buyItem(id,price,currency){
+    if(ownedItems.includes(id))return;
+    if(currency==='coins'&&coins>=price){coins-=price;ownedItems.push(id);saveCurrency();saveShop();updateShopUI();applyBoardTheme()}
+    else if(currency==='gems'&&gems>=price){gems-=price;ownedItems.push(id);saveCurrency();saveShop();updateShopUI();applyBoardTheme()}
+    else{alert('💸 Қаражат жетпейді!')}
+}
+function updateShopUI(){
+    let items=document.querySelectorAll('.shop-item');
+    items.forEach(el=>{
+        let btn=el.querySelector('.buy-btn');if(!btn)return;
+        let id=btn.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if(id&&ownedItems.includes(id)){btn.style.display='none';el.querySelector('.price').textContent=t('owned')}
+    });
+}
+function applyBoardTheme(){
+    if(ownedItems.includes('board_blue')){document.querySelectorAll('.cell.light').forEach(c=>{c.style.background='#8ab4d8'});document.querySelectorAll('.cell.dark').forEach(c=>{c.style.background='#3a5a7a'})}
+    else if(ownedItems.includes('board_green')){document.querySelectorAll('.cell.light').forEach(c=>{c.style.background='#a8d8a8'});document.querySelectorAll('.cell.dark').forEach(c=>{c.style.background='#3a6a3a'})}
+}
+
+// ==================== ОЙЫН ====================
+function initBoard(){
+    board=Array(8).fill().map(()=>Array(8).fill(null));
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++)if((r+c)%2===1){if(r<3)board[r][c]={color:'black',king:false};else if(r>4)board[r][c]={color:'white',king:false}}
+    currentPlayer='white';selectedCell=null;possibleMoves=[];moveHistory=[];gameOver=false;mustCaptureList=[];if(aiTimer)clearTimeout(aiTimer);aiTimer=null;
+}
+function getPieceMoves(r,c,captOnly=false){
+    let piece=board[r][c];if(!piece)return{moves:[],captures:[]};
+    let moves=[],captures=[];
+    let dirs=piece.king?[[-1,-1],[-1,1],[1,-1],[1,1]]:piece.color==='white'?[[-1,-1],[-1,1]]:[[1,-1],[1,1]];
+    for(let[dr,dc]of dirs){
+        if(piece.king){for(let i=1;i<8;i++){let nr=r+dr*i,nc=c+dc*i;if(!inB(nr,nc))break;if(!board[nr][nc]){if(!captOnly)moves.push({r:nr,c:nc})}else if(board[nr][nc].color!==piece.color){let jr=nr+dr,jc=nc+dc;if(inB(jr,jc)&&!board[jr][jc])captures.push({r:jr,c:jc,captured:{r:nr,c:nc}});break}else break}}
+        else{let nr=r+dr,nc=c+dc;if(inB(nr,nc)){if(!board[nr][nc]){if(!captOnly)moves.push({r:nr,c:nc})}else if(board[nr][nc].color!==piece.color){let jr=nr+dr,jc=nc+dc;if(inB(jr,jc)&&!board[jr][jc])captures.push({r:jr,c:jc,captured:{r:nr,c:nc}})}}}
+    }
+    return{moves,captures};
+}
+function inB(r,c){return r>=0&&r<8&&c>=0&&c<8}
+function getAllCaptures(color){let all=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(board[r][c]&&board[r][c].color===color)all.push(...getPieceMoves(r,c,true).captures);return all}
+function hasAnyMoves(color){for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(board[r][c]&&board[r][c].color===color){let m=getPieceMoves(r,c);if(m.captures.length>0||m.moves.length>0)return true}return false}
+function makeMove(fR,fC,tR,tC){
+    let piece=board[fR][fC],move=getPieceMoves(fR,fC),cap=move.captures.find(m=>m.r===tR&&m.c===tC);
+    moveHistory.push({board:board.map(r=>r.map(c=>c?{...c}:null)),currentPlayer,fR,fC,tR,tC});
+    if(cap){board[cap.captured.r][cap.captured.c]=null;sCapture()}else sMove();
+    board[tR][tC]=piece;board[fR][fC]=null;
+    if(!piece.king&&((piece.color==='white'&&tR===0)||(piece.color==='black'&&tR===7))){piece.king=true;sKing()}
+    if(cap){let more=getPieceMoves(tR,tC,true).captures;if(more.length>0){mustCaptureList=[{r:tR,c:tC}];selectedCell={r:tR,c:tC};possibleMoves=more.map(m=>({r:m.r,c:m.c}));renderBoard();updateStatus();saveGame();if(gameMode.startsWith('ai_')&&currentPlayer==='black')scheduleAI();return}}
+    selectedCell=null;possibleMoves=[];mustCaptureList=[];currentPlayer=currentPlayer==='white'?'black':'white';sTurn();
+    if(!hasAnyMoves(currentPlayer)){gameOver=true;let w=currentPlayer==='white'?'black':'white';if(w==='white'){sWin();addWinReward()}else{sLose();addLosePenalty()}}
+    renderBoard();updateStatus();saveGame();if(!gameOver&&gameMode.startsWith('ai_')&&currentPlayer==='black')scheduleAI();
+}
+function scheduleAI(){if(aiTimer)clearTimeout(aiTimer);aiTimer=setTimeout(aiMove,600)}
+function undoMove(){if(gameOver||moveHistory.length===0)return;if(aiTimer)clearTimeout(aiTimer);if(gameMode.startsWith('ai_')){if(moveHistory.length>=2){moveHistory.pop();moveHistory.pop()}else return}else moveHistory.pop();let last=moveHistory.length>0?moveHistory[moveHistory.length-1]:null;if(last){board=last.board.map(r=>r.map(c=>c?{...c}:null));currentPlayer=last.currentPlayer}else initBoard();selectedCell=null;possibleMoves=[];mustCaptureList=[];gameOver=false;renderBoard();updateStatus();saveGame();if(!gameOver&&gameMode.startsWith('ai_')&&currentPlayer==='black')scheduleAI()}
+function renderBoard(){
+    let be=document.getElementById('board');be.innerHTML='';
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+        let cell=document.createElement('div');cell.classList.add('cell');cell.classList.add((r+c)%2===0?'light':'dark');
+        if(board[r][c]){let p=document.createElement('div');p.classList.add('piece');p.classList.add(board[r][c].color==='white'?'piece-white':'piece-black');if(board[r][c].king)p.classList.add('piece-king');if(pieceTheme==='gold'&&board[r][c].color==='white')p.classList.add('piece-gold');cell.appendChild(p)}
+        if(selectedCell&&selectedCell.r===r&&selectedCell.c===c)cell.classList.add('selected');
+        if(possibleMoves.some(m=>m.r===r&&m.c===c))cell.classList.add('possible');
+        cell.addEventListener('click',()=>handleClick(r,c));be.appendChild(cell);
+    }
+    applyBoardTheme();
+}
+function handleClick(r,c){
+    if(gameOver)return;if(gameMode.startsWith('ai_')&&currentPlayer==='black')return;initAudio();
+    if(mustCaptureList.length>0){let must=mustCaptureList[0];if(must.r===r&&must.c===c){let m=possibleMoves.find(m=>m.r===r&&m.c===c);if(m)makeMove(must.r,must.c,r,c)}return}
+    if(selectedCell&&possibleMoves.some(m=>m.r===r&&m.c===c)){makeMove(selectedCell.r,selectedCell.c,r,c);return}
+    if(board[r][c]&&board[r][c].color===currentPlayer){let allCaps=getAllCaptures(currentPlayer),pm=getPieceMoves(r,c);if(mandatoryCapture&&allCaps.length>0&&pm.captures.length===0)return;selectedCell={r,c};possibleMoves=mandatoryCapture&&allCaps.length>0?pm.captures.map(m=>({r:m.r,c:m.c})):[...pm.captures.map(m=>({r:m.r,c:m.c})),...pm.moves.map(m=>({r:m.r,c:m.c}))]}else{selectedCell=null;possibleMoves=[]}
+    renderBoard();
+}
+function updateStatus(){let el=document.getElementById('statusText');if(gameOver){let w=currentPlayer==='white'?'black':'white';el.textContent=w==='white'?t('youWon'):t('youLost')}else if(gameMode.startsWith('ai_')&&currentPlayer==='black')el.textContent=t('computerThinking');else el.textContent=t('yourTurn')}
+function aiMove(){
+    if(gameOver||currentPlayer!=='black')return;initAudio();
+    if(mustCaptureList.length>0){let must=mustCaptureList[0],moves=getPieceMoves(must.r,must.c,true).captures;if(moves.length>0){let ch=moves[Math.floor(Math.random()*moves.length)];makeMove(must.r,must.c,ch.r,ch.c);return}}
+    let allCaps=getAllCaptures('black'),moves=[];
+    if(allCaps.length>0){for(let cap of allCaps){let pm=getPieceMoves(cap.r,cap.c,true);moves.push(...pm.captures.map(m=>({fR:cap.r,fC:cap.c,tR:m.r,tC:m.c})))}}
+    if(moves.length===0){for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(board[r][c]&&board[r][c].color==='black'){let pm=getPieceMoves(r,c);moves.push(...pm.moves.map(m=>({fR:r,fC:c,tR:m.r,tC:m.c})));moves.push(...pm.captures.map(m=>({fR:r,fC:c,tR:m.r,tC:m.c})))}}
+    if(moves.length===0)return;
+    let ch;if(aiLevel==='easy')ch=moves[Math.floor(Math.random()*moves.length)];else if(aiLevel==='medium'){let caps=moves.filter(m=>getPieceMoves(m.fR,m.fC,true).captures.some(c=>c.r===m.tR&&c.c===m.tC));ch=caps.length>0?caps[Math.floor(Math.random()*caps.length)]:moves[Math.floor(Math.random()*moves.length)]}else{let caps=moves.filter(m=>getPieceMoves(m.fR,m.fC,true).captures.some(c=>c.r===m.tR&&c.c===m.tC));if(caps.length>0)ch=caps[Math.floor(Math.random()*caps.length)];else{let kings=moves.filter(m=>board[m.fR][m.fC]&&board[m.fR][m.fC].king);ch=kings.length>0?kings[Math.floor(Math.random()*kings.length)]:moves[Math.floor(Math.random()*moves.length)]}}
+    makeMove(ch.fR,ch.fC,ch.tR,ch.tC);
+}
+function saveGame(){try{localStorage.setItem('csGm',JSON.stringify({board,currentPlayer,moveHistory,gameOver,gameMode,aiLevel,mustCaptureList}))}catch(e){}}
+function loadGame(){try{let d=localStorage.getItem('csGm');if(!d)return false;let s=JSON.parse(d);board=s.board;currentPlayer=s.currentPlayer;moveHistory=s.moveHistory||[];gameOver=s.gameOver;gameMode=s.gameMode;aiLevel=s.aiLevel;mustCaptureList=s.mustCaptureList||[];selectedCell=null;possibleMoves=[];return true}catch(e){return false}}
+
+// ==================== НАВИГАЦИЯ ====================
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function showMenu(){if(aiTimer)clearTimeout(aiTimer);updateCurrencyUI();let last=localStorage.getItem('csBT');if(!last||Date.now()-parseInt(last)>=86400000){if(coins<750)document.getElementById('bonusMsg').textContent=t('bonusReady');else document.getElementById('bonusMsg').textContent=''}show('menuScreen')}
+function showMode(){document.getElementById('captureToggle').textContent=mandatoryCapture?t('mandatory'):t('optional');show('modeScreen')}
+function showDifficulty(){show('difficultyScreen')}
+function showShop(){updateCurrencyUI();updateShopUI();show('shopScreen')}
+function showSettings(){show('settingsScreen');applyLang()}
+function showRules(){show('rulesScreen');applyLang()}
+function showInfo(){show('infoScreen');applyLang()}
+function toggleCapture(){mandatoryCapture=!mandatoryCapture;document.getElementById('captureToggle').textContent=mandatoryCapture?t('mandatory'):t('optional');localStorage.setItem('csMC',mandatoryCapture?'on':'off')}
+function startGame(mode){initAudio();initBoard();gameMode=mode;aiLevel=mode.replace('ai_','');show('gameScreen');renderBoard();updateStatus();saveGame();if(mode.startsWith('ai_')&&currentPlayer==='black')scheduleAI()}
+function continueGame(){initAudio();if(loadGame()){show('gameScreen');renderBoard();updateStatus();if(!gameOver&&gameMode.startsWith('ai_')&&currentPlayer==='black')scheduleAI()}else alert(t('noSave'))}
+function exitGame(){if(aiTimer)clearTimeout(aiTimer);saveGame();updateCurrencyUI();showMenu()}
+
+// ==================== БАСТАУ ====================
+function init(){
+    let sl=localStorage.getItem('csL');if(sl&&LANG[sl])currentLang=sl;
+    let ss=localStorage.getItem('csS');if(ss==='off')soundEnabled=false;
+    let sm=localStorage.getItem('csMC');if(sm==='off')mandatoryCapture=false;
+    loadCurrency();loadShop();updateCurrencyUI();applyLang();updateLangButtons();
+    document.getElementById('soundStatusSettings').textContent=soundEnabled?t('on'):t('off');
+    document.getElementById('captureToggle').textContent=mandatoryCapture?t('mandatory'):t('optional');
+    let last=localStorage.getItem('csBT');if(!last||Date.now()-parseInt(last)>=86400000){if(coins<750)document.getElementById('bonusMsg').textContent=t('bonusReady')}
+    showMenu();
+}
+init();
+</script>
+</body>
+</html>
+```
